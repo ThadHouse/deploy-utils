@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
@@ -24,7 +25,11 @@ public interface DeployContext {
 
     DeployLocation getDeployLocation();
 
-    CommandDeployResult execute(String command);
+    CommandDeployResult execute(String command, Optional<InputStream> standardInput);
+
+    default CommandDeployResult execute(String command) {
+        return execute(command, Optional.empty());
+    }
 
     // Send a batch of files
     void put(Map<String, Callable<InputStream>> files, CacheMethod cache);

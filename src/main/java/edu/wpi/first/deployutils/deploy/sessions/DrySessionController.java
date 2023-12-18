@@ -3,6 +3,7 @@ package edu.wpi.first.deployutils.deploy.sessions;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
@@ -19,7 +20,7 @@ public class DrySessionController extends AbstractSessionController implements I
     }
 
     @Override
-    public CommandDeployResult execute(String command) {
+    public CommandDeployResult execute(String command, Optional<InputStream> standardInput) {
         return new CommandDeployResult(command, "", 0);
     }
 

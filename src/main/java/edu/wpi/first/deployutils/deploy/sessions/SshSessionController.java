@@ -64,7 +64,7 @@ public class SshSessionController extends AbstractSessionController implements I
         getLogger().info("Connected!");
     }
 
-    private CommandDeployResult executeInternal(String command) throws IOException {
+    private CommandDeployResult executeInternal(String command, Optional<InputStream> standardInput) throws IOException {
         int sem = acquire();
 
         try (OutputStream channelErr = new NullOutputStream();
@@ -73,6 +73,12 @@ public class SshSessionController extends AbstractSessionController implements I
             channel.setOut(channelOut);
             channel.setErr(channelErr);
             channel.open().await();
+
+            if (standardInput.isPresent()) {
+                try (OutputStream invertedIn = channel.getInvertedIn()) {
+                    standardInput.get().transferTo(invertedIn);
+                }
+            }
 
             Collection<ClientChannelEvent> waitMask = channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), 0L);
             if (waitMask.contains(ClientChannelEvent.TIMEOUT)) {
@@ -132,9 +138,9 @@ public class SshSessionController extends AbstractSessionController implements I
     }
 
     @Override
-    public CommandDeployResult execute(String command) {
+    public CommandDeployResult execute(String command, Optional<InputStream> standardInput) {
         try {
-            return executeInternal(command);
+            return executeInternal(command, standardInput);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

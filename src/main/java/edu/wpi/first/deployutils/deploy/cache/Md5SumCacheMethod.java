@@ -6,13 +6,15 @@ import org.gradle.api.logging.Logging;
 import edu.wpi.first.deployutils.deploy.context.DeployContext;
 import edu.wpi.first.deployutils.log.ETLogger;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -66,9 +68,12 @@ public class Md5SumCacheMethod extends Md5BackedCacheMethod {
             log.debug(localChecksums);
         }
 
-        String tmpFileName = "_tmp" + UUID.randomUUID().toString().toLowerCase().replace("-", "") + ".et.md5";
-
-        String result = context.execute("echo '" + localChecksums + "' > " + tmpFileName + " && md5sum -c " + tmpFileName + " 2> /dev/null; rm " + tmpFileName).getResult();
+        String result;
+        try (InputStream is = new ByteArrayInputStream(localChecksums.getBytes(StandardCharsets.UTF_8))) {
+            result = context.execute("md5sum -c 2> /dev/null", Optional.of(is)).getResult();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         if (log.isDebugEnabled()) {
             log.debug("Remote Checksums " + cs + ":");

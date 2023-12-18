@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -54,11 +55,11 @@ public class DefaultDeployContext implements DeployContext {
     }
 
     @Override
-    public CommandDeployResult execute(String command) {
-        session.execute("mkdir -p " + workingDir);
+    public CommandDeployResult execute(String command, Optional<InputStream> standardInput) {
+        session.execute("mkdir -p " + workingDir, Optional.empty());
 
         logger.log("  -C-> " + command + " @ " + workingDir);
-        CommandDeployResult result = session.execute(String.join("\n", "cd " + workingDir, command));
+        CommandDeployResult result = session.execute(String.join("\n", "cd " + workingDir, command), standardInput);
         if (result != null) {
             if (result.getResult() != null && result.getResult().length() > 0) {
                 logger.log("    -[" + result.getExitCode() + "]-> " + result.getResult());
@@ -71,7 +72,7 @@ public class DefaultDeployContext implements DeployContext {
 
     @Override
     public void put(Map<String, Callable<InputStream>> files, CacheMethod cache) {
-        session.execute("mkdir -p " + workingDir);
+        session.execute("mkdir -p " + workingDir, Optional.empty());
 
         Collection<Entry<String, Callable<InputStream>>> cacheHits;
         Collection<Entry<String, Callable<InputStream>>> cacheMisses;
