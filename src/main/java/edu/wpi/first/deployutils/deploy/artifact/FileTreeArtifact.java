@@ -53,7 +53,7 @@ public class FileTreeArtifact extends AbstractArtifact implements CacheableArtif
             });
 
             context.execute("mkdir -p " + String.join(" ", mkdirs));
-            context.put(f, cacheMethod.getOrElse(null));
+            context.putFiles(f, cacheMethod.getOrElse(null));
         } else {
             ETLogger logger = context.getLogger();
             if (logger != null) {

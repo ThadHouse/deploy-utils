@@ -35,7 +35,7 @@ public class FileCollectionArtifact extends AbstractArtifact implements Cacheabl
     @Override
     public void deploy(DeployContext context) {
         if (files.isPresent())
-            context.put(files.get().getFiles(), cacheMethod.getOrElse(null));
+            context.putFiles(files.get().getFiles(), cacheMethod.getOrElse(null));
         else {
             ETLogger logger = context.getLogger();
             if (logger != null) {

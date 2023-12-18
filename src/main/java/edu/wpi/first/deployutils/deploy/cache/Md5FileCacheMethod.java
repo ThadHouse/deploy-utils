@@ -1,27 +1,24 @@
 package edu.wpi.first.deployutils.deploy.cache;
 
-import org.codehaus.groovy.runtime.EncodingGroovyMethods;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 
 import edu.wpi.first.deployutils.deploy.context.DeployContext;
 import edu.wpi.first.deployutils.log.ETLogger;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
-import java.nio.file.Files;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import javax.inject.Inject;
 
-public class Md5FileCacheMethod extends AbstractCacheMethod {
+public class Md5FileCacheMethod extends Md5BackedCacheMethod {
     private Logger log = Logging.getLogger(Md5SumCacheMethod.class);
     private int csI = 0;
     private Gson gson = new Gson();
@@ -42,28 +39,9 @@ public class Md5FileCacheMethod extends AbstractCacheMethod {
         return gson.fromJson(remote_cache, mapType);
     }
 
-    public Map<String, String> localChecksumsMap(Map<String, File> files) {
-        MessageDigest md;
-        try {
-            md = MessageDigest.getInstance("MD5");
-        } catch (NoSuchAlgorithmException e1) {
-            throw new RuntimeException(e1);
-        }
-        return files.entrySet().stream().collect(Collectors.toMap(entry -> {
-            return entry.getKey();
-        }, entry -> {
-            md.reset();
-            try {
-                md.update(Files.readAllBytes(entry.getValue().toPath()));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-                return EncodingGroovyMethods.encodeHex(md.digest()).toString();
-            }));
-    }
-
     @Override
-    public Set<String> needsUpdate(DeployContext context, Map<String, File> files) {
+    public Map<Boolean, List<Entry<String, Callable<InputStream>>>> needsUpdate(DeployContext context,
+            Map<String, Callable<InputStream>> files) {
         ETLogger logger = context.getLogger();
         if (logger != null) {
             logger.silent(true);
@@ -85,18 +63,26 @@ public class Md5FileCacheMethod extends AbstractCacheMethod {
             log.debug(gson.toJson(local_md5, mapType));
         }
 
-        Set<String> needs_update = files.keySet().stream().filter(name -> {
-            String md5 = remote_md5.get(name);
-            return md5 == null || !md5.equals(local_md5.get(name));
-        }).collect(Collectors.toSet());
+        Map<Boolean, List<Entry<String, Callable<InputStream>>>> checkResults = files.entrySet().stream().collect(Collectors.partitioningBy(entry -> {
+            String md5 = remote_md5.get(entry.getKey());
+            return md5 == null || !md5.equals(local_md5.get(entry.getKey()));
+        }));
 
-        if (needs_update.size() > 0) {
+        List<Entry<String, Callable<InputStream>>> needsUpdate = checkResults.get(true);
+
+        // Set<String> needs_update = files.entrySet().stream().filter(name -> {
+        //     String md5 = remote_md5.get(name);
+        //     return md5 == null || !md5.equals(local_md5.get(name));
+        // }).collect(Collectors.toSet());
+
+        if (!needsUpdate.isEmpty()) {
             context.execute("echo '" + gson.toJson(local_md5, mapType) + "' > cache.md5");
         }
 
         if (logger != null) {
             logger.silent(false);
         }
-        return needs_update;
+
+        return checkResults;
     }
 }

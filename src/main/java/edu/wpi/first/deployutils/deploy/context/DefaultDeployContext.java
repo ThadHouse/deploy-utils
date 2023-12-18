@@ -1,10 +1,11 @@
 package edu.wpi.first.deployutils.deploy.context;
 
-import java.io.File;
 import java.io.InputStream;
-import java.util.HashMap;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -69,46 +70,32 @@ public class DefaultDeployContext implements DeployContext {
     }
 
     @Override
-    public void put(Map<String, File> files, CacheMethod cache) {
+    public void put(Map<String, Callable<InputStream>> files, CacheMethod cache) {
         session.execute("mkdir -p " + workingDir);
 
-        Map<String, File> cacheHit = new HashMap<>();
-        Map<String, File> cacheMiss = new HashMap<>(files);
+        Collection<Entry<String, Callable<InputStream>>> cacheHits;
+        Collection<Entry<String, Callable<InputStream>>> cacheMisses;
 
         if (cache != null && cache.compatible(this)) {
-            Set<String> updateRequired = cache.needsUpdate(this, files);
-            for (String string : files.keySet()) {
-                if (updateRequired.contains(string)) continue;
-                cacheHit.put(string, files.get(string));
-            }
-            for (String string : cacheHit.keySet()) {
-                cacheMiss.remove(string);
-            }
+            var updateRequired = cache.needsUpdate(this, files);
+            cacheHits = updateRequired.get(false);
+            cacheMisses = updateRequired.get(true);
+        } else {
+            cacheHits = List.of();
+            cacheMisses = files.entrySet();
         }
 
-        if (!cacheMiss.isEmpty()) {
-            Map<String, File> entries = cacheMiss.entrySet().stream().map(x -> {
-                logger.log("  -F-> " + x.getValue() + " -> " + x.getKey() + " @ " + workingDir);
+        if (!cacheMisses.isEmpty()) {
+            Map<String, Callable<InputStream>> entries = cacheMisses.stream().map(x -> {
+                logger.log("  -F-> " + x.getKey() + " @ " + workingDir);
                 return x;
             }).collect(Collectors.toMap(x -> PathUtils.combine(workingDir, x.getKey()), x -> x.getValue()));
             session.put(entries);
         }
 
-        if (cacheHit.size() > 0) {
-            logger.log("  " + cacheHit.size() + " file(s) are up-to-date and were not deployed");
+        if (!cacheHits.isEmpty()) {
+            logger.log("  " + cacheHits.size() + " file(s) are up-to-date and were not deployed");
         }
-    }
-
-    @Override
-    public void put(File source, String dest, CacheMethod cache) {
-        put(Map.of(dest, source), cache);
-    }
-
-
-
-    @Override
-    public void put(Set<File> files, CacheMethod cache) {
-        put(files.stream().collect(Collectors.toMap(x -> x.getName(), x -> x)), cache);
     }
 
     @Override
@@ -119,10 +106,5 @@ public class DefaultDeployContext implements DeployContext {
     @Override
     public DeployContext subContext(String workingDir) {
         return new DefaultDeployContext(session, logger.push(), deployLocation, PathUtils.combine(this.workingDir, workingDir));
-    }
-
-    @Override
-    public void put(InputStream source, String dest) {
-        session.put(source, dest);
     }
 }

@@ -1,28 +1,24 @@
 package edu.wpi.first.deployutils.deploy.cache;
 
-import org.codehaus.groovy.runtime.EncodingGroovyMethods;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 
 import edu.wpi.first.deployutils.deploy.context.DeployContext;
 import edu.wpi.first.deployutils.log.ETLogger;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-public class Md5SumCacheMethod extends AbstractCacheMethod {
+public class Md5SumCacheMethod extends Md5BackedCacheMethod {
     private Logger log = Logging.getLogger(Md5SumCacheMethod.class);
     private int csI = 0;
 
@@ -45,31 +41,16 @@ public class Md5SumCacheMethod extends AbstractCacheMethod {
         return !sum.isEmpty() && sum.split(" ")[0].equalsIgnoreCase("d8e8fca2dc0f896fd7cb4cb0031ba249");
     }
 
-    String localChecksumsText(Map<String, File> files) {
-        MessageDigest md;
-        try {
-            md = MessageDigest.getInstance("MD5");
-        } catch (NoSuchAlgorithmException e1) {
-            throw new RuntimeException(e1);
-        }
-        Optional<String> sums = files.entrySet().stream().map(entry -> {
-            md.reset();
-            try {
-                md.update(Files.readAllBytes(entry.getValue().toPath()));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            String local = EncodingGroovyMethods.encodeHex(md.digest()).toString();
-            return local + " *" + entry.getKey();
+    private String localChecksumsText(Map<String, Callable<InputStream>> files) {
+        Map<String, String> checksums = localChecksumsMap(files);
+        Optional<String> sums = checksums.entrySet().stream().map(entry -> {
+            return entry.getValue().trim() + " *" + entry.getKey();
         }).reduce((a, b) -> a + "\n" + b);
-        if (sums.isEmpty()) {
-            return null;
-        }
-        return sums.get();
+        return sums.orElse(null);
     }
 
     @Override
-    public Set<String> needsUpdate(DeployContext context, Map<String, File> files) {
+    public Map<Boolean, List<Entry<String, Callable<InputStream>>>> needsUpdate(DeployContext context, Map<String, Callable<InputStream>> files) {
         ETLogger logger = context.getLogger();
         if (logger != null) {
             logger.silent(true);
@@ -104,6 +85,6 @@ public class Md5SumCacheMethod extends AbstractCacheMethod {
             logger.silent(false);
         }
 
-        return files.keySet().stream().filter(name -> !upToDate.contains(name)).collect(Collectors.toSet());
+        return files.entrySet().stream().collect(Collectors.partitioningBy(entry -> !upToDate.contains(entry.getKey())));
     }
 }

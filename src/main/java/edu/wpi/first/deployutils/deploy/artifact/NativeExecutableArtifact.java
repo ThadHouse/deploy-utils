@@ -90,7 +90,7 @@ public class NativeExecutableArtifact extends AbstractArtifact implements Cachea
         CacheMethod cm = cacheMethod.getOrElse(null);
 
         File exeFile = getDeployedFile();
-        context.put(exeFile, getFilename().getOrElse(exeFile.getName()), cm);
+        context.putFile(getFilename().getOrElse(exeFile.getName()), exeFile, cm);
 
         if (deployLibraries) {
             DeployContext libCtx = context;
@@ -98,7 +98,7 @@ public class NativeExecutableArtifact extends AbstractArtifact implements Cachea
                 libCtx = context.subContext(libraryDirectory.get());
             }
             var libFiles = install.getLibs().getAsFileTree().matching(libraryFilter).getFiles();
-            libCtx.put(libFiles, cm);
+            libCtx.putFiles(libFiles, cm);
         }
     }
 }

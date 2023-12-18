@@ -69,7 +69,7 @@ public class BinaryLibraryArtifact extends AbstractArtifact implements Cacheable
     @Override
     public void deploy(DeployContext context) {
         if (doDeploy) {
-            context.put(files, getCacheMethod().getOrElse(null));
+            context.putFiles(files, getCacheMethod().getOrElse(null));
         } else {
             ETLogger logger = context.getLogger();
             if (logger != null) {

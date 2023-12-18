@@ -1,16 +1,15 @@
 package edu.wpi.first.deployutils.deploy.sessions;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 
 import org.apache.sshd.client.channel.ClientChannel;
 import org.apache.sshd.client.channel.ClientChannelEvent;
@@ -69,8 +68,8 @@ public class SshSessionController extends AbstractSessionController implements I
         int sem = acquire();
 
         try (OutputStream channelErr = new NullOutputStream();
-            ByteArrayOutputStream channelOut = new ByteArrayOutputStream();
-            ClientChannel channel = session.createExecChannel(command)) {
+                ByteArrayOutputStream channelOut = new ByteArrayOutputStream();
+                ClientChannel channel = session.createExecChannel(command)) {
             channel.setOut(channelOut);
             channel.setErr(channelErr);
             channel.open().await();
@@ -85,20 +84,21 @@ public class SshSessionController extends AbstractSessionController implements I
                 return new CommandDeployResult(command, "No exit status received", -1);
             }
             byte[] outBytes = channelOut.toByteArray();
-            return new CommandDeployResult(command, new String(outBytes, StandardCharsets.UTF_8), exitStatus.intValue());
+            return new CommandDeployResult(command, new String(outBytes, StandardCharsets.UTF_8),
+                    exitStatus.intValue());
         } finally {
             release(sem);
         }
     }
 
-
-    private void putInternal(Map<String, File> files) throws IOException {
+    private void putInternal(Map<String, Callable<InputStream>> files) throws Exception {
         int sem = acquire();
 
         try (SftpClient sftp = SftpClientFactory.instance().createSftpClient(session)) {
-            for (Map.Entry<String, File> file : files.entrySet()) {
-                try (var remoteFile = sftp.write(file.getKey())) {
-                    Files.copy(file.getValue().toPath(), remoteFile);
+            for (Map.Entry<String, Callable<InputStream>> file : files.entrySet()) {
+                try (InputStream localFile = file.getValue().call();
+                        OutputStream remoteFile = sftp.write(file.getKey())) {
+                    localFile.transferTo(remoteFile);
                 }
             }
         } finally {
@@ -131,18 +131,6 @@ public class SshSessionController extends AbstractSessionController implements I
         return this.port;
     }
 
-    private void putInternal(InputStream source, String dest) throws IOException {
-        int sem = acquire();
-
-        try (SftpClient sftp = SftpClientFactory.instance().createSftpClient(session)) {
-            try (var remoteFile = sftp.write(dest)) {
-                source.transferTo(remoteFile);
-            }
-        } finally {
-            release(sem);
-        }
-    }
-
     @Override
     public CommandDeployResult execute(String command) {
         try {
@@ -153,19 +141,10 @@ public class SshSessionController extends AbstractSessionController implements I
     }
 
     @Override
-    public void put(Map<String, File> files) {
+    public void put(Map<String, Callable<InputStream>> files) {
         try {
             putInternal(files);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void put(InputStream source, String dest) {
-        try {
-            putInternal(source, dest);
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }

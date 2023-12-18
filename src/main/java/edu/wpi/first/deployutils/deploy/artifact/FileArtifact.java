@@ -45,7 +45,7 @@ public class FileArtifact extends AbstractArtifact implements CacheableArtifact 
     public void deploy(DeployContext context) {
         if (file.isPresent()) {
             File f = file.get();
-            context.put(f, filename.getOrElse(f.getName()), cacheMethod.getOrElse(null));
+            context.putFile(filename.getOrElse(f.getName()), f, cacheMethod.getOrElse(null));
         } else {
             ETLogger logger = context.getLogger();
             if (logger != null) {

@@ -1,8 +1,10 @@
 package edu.wpi.first.deployutils.deploy.cache;
 
-import java.io.File;
+import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import edu.wpi.first.deployutils.deploy.context.DeployContext;
@@ -38,10 +40,9 @@ public class DefaultCacheMethod extends AbstractCacheMethod {
     }
 
     @Override
-    public Set<String> needsUpdate(DeployContext context, Map<String, File> files) {
-        return files.entrySet().stream()
-            .filter(entry -> needsUpdate.check(context, entry.getKey(), entry.getValue()))
-            .map(entry -> entry.getKey())
-            .collect(Collectors.toSet());
+    public Map<Boolean, List<Entry<String, Callable<InputStream>>>> needsUpdate(DeployContext context,
+            Map<String, Callable<InputStream>> files) {
+        return files.entrySet().stream().collect(
+                Collectors.partitioningBy(entry -> needsUpdate.check(context, entry.getKey(), entry.getValue())));
     }
 }

@@ -1,9 +1,9 @@
 package edu.wpi.first.deployutils.deploy.sessions;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 
@@ -24,7 +24,7 @@ public class DrySessionController extends AbstractSessionController implements I
     }
 
     @Override
-    public void put(Map<String, File> files) { }
+    public void put(Map<String, Callable<InputStream>> files) { }
 
     @Override
     public String friendlyString() {
@@ -44,9 +44,5 @@ public class DrySessionController extends AbstractSessionController implements I
     @Override
     public int getPort() {
         return 22;
-    }
-
-    @Override
-    public void put(InputStream source, String dest) {
     }
 }

@@ -1,10 +1,26 @@
 plugins {
-    id "edu.wpi.first.DeployUtils" version "2024.2.0"
+    id "edu.wpi.first.DeployUtils" version "2025.0.0"
 }
 
 deploy {
     targets {
         myTarget(getTargetTypeClass("RemoteTarget")) {
+            directory = '/home/admin'
+
+            locations {
+                ssh(getLocationTypeClass('SshDeployLocation')) {
+                    address = "172.22.11.2"  // Required. The address to try
+                    user = 'admin'             // Required. The user to login as
+                    password = ''               // The password for the user. Default: blank (empty) string
+                    ipv6 = false                // Are IPv6 addresses permitted? Default: false
+                }
+            }
+
+            artifacts {
+                myFileArtifact(getArtifactTypeClass('FileArtifact')) {
+                    file = file('build.gradle')               // Set the file to deploy. Required.
+                }
+            }
         }
     }
 }
