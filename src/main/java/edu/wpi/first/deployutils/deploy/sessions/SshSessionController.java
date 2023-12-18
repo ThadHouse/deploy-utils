@@ -72,6 +72,7 @@ public class SshSessionController extends AbstractSessionController implements I
                 ClientChannel channel = session.createExecChannel(command)) {
             channel.setOut(channelOut);
             channel.setErr(channelErr);
+            channel.addRequestHandler(ClientKeepAliveHandler.INSTANCE);
             channel.open().await();
 
             if (standardInput.isPresent()) {
@@ -101,6 +102,7 @@ public class SshSessionController extends AbstractSessionController implements I
         int sem = acquire();
 
         try (SftpClient sftp = SftpClientFactory.instance().createSftpClient(session)) {
+            sftp.getClientChannel().addRequestHandler(ClientKeepAliveHandler.INSTANCE);
             for (Map.Entry<String, Callable<InputStream>> file : files.entrySet()) {
                 try (InputStream localFile = file.getValue().call();
                         OutputStream remoteFile = sftp.write(file.getKey())) {
