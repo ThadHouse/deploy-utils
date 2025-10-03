@@ -13,9 +13,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.sshd.client.auth.password.UserAuthPasswordFactory;
 import org.apache.sshd.client.channel.ClientChannel;
 import org.apache.sshd.client.channel.ClientChannelEvent;
 import org.apache.sshd.client.session.ClientSession;
+import org.apache.sshd.common.keyprovider.KeyIdentityProvider;
 import org.apache.sshd.common.util.io.output.NullOutputStream;
 import org.apache.sshd.sftp.client.SftpClient;
 import org.apache.sshd.sftp.client.SftpClientFactory;
@@ -50,6 +52,8 @@ public class SshSessionController extends AbstractSessionController implements I
                 sshConfig.get().execute(localSession);
             } else {
                 localSession.setServerKeyVerifier(new AcceptAllLoggedServerKeyVerifier(getLogger()));
+                localSession.setUserAuthFactories(List.of(UserAuthPasswordFactory.INSTANCE));
+                localSession.setKeyIdentityProvider(KeyIdentityProvider.EMPTY_KEYS_PROVIDER);
                 if (password != null && !password.isBlank()) {
                     localSession.addPasswordIdentity(password);
                 }
