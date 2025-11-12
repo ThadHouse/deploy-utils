@@ -1,5 +1,5 @@
 plugins {
-    id "edu.wpi.first.DeployUtils" version "2025.2.2"
+    id "org.wpilib.DeployUtils" version "2027.0.0"
 }
 
 deploy {
@@ -7,9 +7,4 @@ deploy {
         myTarget(getTargetTypeClass("RemoteTarget")) {
         }
     }
-}
-
-wrapper {
-    gradleVersion = '8.10.2'
-    distributionType = Wrapper.DistributionType.BIN
 }

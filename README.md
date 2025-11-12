@@ -5,7 +5,7 @@ Deploy to Embedded Targets in both Java and C++.
 For all projects, you can define deployment targets and artifacts. The deploy process works over SSH/SFTP and
 is extremely quick.
 
-For the previous functionality for native library building, see edu.wpi.first.NativeUtils
+For the previous functionality for native library building, see org.wpilib.NativeUtils
 
 Commands:
 `gradlew deploy` will deploy all artifacts
@@ -20,11 +20,11 @@ Properties:
 Include the following in your `build.gradle`
 ```gradle
 plugins {
-    id "edu.wpi.first.DeployUtils" version "<latest version>"
+    id "org.wpilib.DeployUtils" version "<latest version>"
 }
 ```
 
-See [https://plugins.gradle.org/plugin/edu.wpi.first.DeployUtils](https://plugins.gradle.org/plugin/edu.first.wpi.DeployUtils) for the latest version
+See [https://plugins.gradle.org/plugin/org.wpilib.DeployUtils](https://plugins.gradle.org/plugin/org.wpilib.DeployUtils) for the latest version
 
 ## Spec
 
