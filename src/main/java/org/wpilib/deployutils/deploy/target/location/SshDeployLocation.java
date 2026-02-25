@@ -87,4 +87,6 @@ public class SshDeployLocation extends AbstractDeployLocation {
         return "SshDeployLocation[" + friendlyString() + "]";
     }
 
+    public void discover() {
+    }
 }
