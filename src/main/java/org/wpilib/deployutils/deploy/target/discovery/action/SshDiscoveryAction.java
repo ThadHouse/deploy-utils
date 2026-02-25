@@ -35,6 +35,7 @@ public class SshDiscoveryAction extends AbstractDiscoveryAction {
     @Override
     public DeployContext discover() {
         SshDeployLocation location = sshLocation();
+        location.discover();
         RemoteTarget target = location.getTarget();
         String address = location.getAddress();
         log = ETLoggerFactory.INSTANCE.create("SshDiscoverAction[" + address + "]");
