@@ -8,12 +8,10 @@ import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.Jar;
 import org.wpilib.deployutils.deploy.target.RemoteTarget;
 
-@Deprecated
-public class JavaArtifact extends FileArtifact {
+public class JavaJarArtifact extends FileArtifact {
 
     @Inject
-    @Deprecated
-    public JavaArtifact(String name, RemoteTarget target) {
+    public JavaJarArtifact(String name, RemoteTarget target) {
         super(name, target);
 
         jarProvider = target.getProject().getObjects().property(Jar.class);
@@ -23,12 +21,10 @@ public class JavaArtifact extends FileArtifact {
 
     private final Property<Jar> jarProvider;
 
-    @Deprecated
     public Provider<Jar> getJarProvider() {
         return jarProvider;
     }
 
-    @Deprecated
     public void setJarTask(TaskProvider<Jar> jarTask) {
         jarProvider.set(jarTask);
         getFile().set(jarTask.get().getArchiveFile().map(x -> x.getAsFile()));

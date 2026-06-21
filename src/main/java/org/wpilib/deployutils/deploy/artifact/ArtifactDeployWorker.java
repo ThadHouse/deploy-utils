@@ -20,7 +20,11 @@ public abstract class ArtifactDeployWorker implements WorkAction<ArtifactDeployP
         DeployContext context = rootContext.subContext(artifact.getDirectory().get());
         boolean enabled = artifact.isEnabled(context);
         if (enabled) {
+            var startTime = System.nanoTime();
             ArtifactRunner.runDeploy(artifact, context);
+            var endTime = System.nanoTime();
+            var duration = (endTime - startTime) / 1_000_000;
+            context.getLogger().log("Artifact deployed in " + duration + " ms");
         } else {
             context.getLogger().log("Artifact skipped");
         }

@@ -21,6 +21,8 @@ import org.wpilib.deployutils.deploy.artifact.FileArtifact;
 import org.wpilib.deployutils.deploy.artifact.FileCollectionArtifact;
 import org.wpilib.deployutils.deploy.artifact.FileTreeArtifact;
 import org.wpilib.deployutils.deploy.artifact.JavaArtifact;
+import org.wpilib.deployutils.deploy.artifact.JavaClasspathArtifact;
+import org.wpilib.deployutils.deploy.artifact.JavaJarArtifact;
 import org.wpilib.deployutils.deploy.artifact.MavenArtifact;
 import org.wpilib.deployutils.deploy.artifact.MultiCommandArtifact;
 import org.wpilib.deployutils.deploy.artifact.NativeExecutableArtifact;
@@ -100,6 +102,8 @@ public class DeployExtension {
         NamedObjectFactory.registerType(NativeExecutableArtifact.class, artifacts, target, objects);
         NamedObjectFactory.registerType(FileArtifact.class, artifacts, target, objects);
         NamedObjectFactory.registerType(JavaArtifact.class, artifacts, target, objects);
+        NamedObjectFactory.registerType(JavaJarArtifact.class, artifacts, target, objects);
+        NamedObjectFactory.registerType(JavaClasspathArtifact.class, artifacts, target, objects);
         NamedObjectFactory.registerType(ActionArtifact.class, artifacts, target, objects);
         NamedObjectFactory.registerType(FileCollectionArtifact.class, artifacts, target, objects);
         NamedObjectFactory.registerType(FileTreeArtifact.class, artifacts, target, objects);

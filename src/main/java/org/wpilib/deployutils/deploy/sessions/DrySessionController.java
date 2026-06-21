@@ -52,6 +52,10 @@ public class DrySessionController extends AbstractSessionController implements I
     }
 
     @Override
+    public void putStringFiles(Map<String, String> files) {
+    }
+
+    @Override
     public void delete(List<String> files) {
     }
 }

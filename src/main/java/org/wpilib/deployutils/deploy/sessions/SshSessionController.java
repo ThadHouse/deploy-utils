@@ -109,6 +109,20 @@ public class SshSessionController extends AbstractSessionController implements I
         }
     }
 
+    private void putStringFilesInternal(Map<String, String> files) throws IOException {
+        int sem = acquire();
+
+        try (SftpClient sftp = SftpClientFactory.instance().createSftpClient(session)) {
+            for (Map.Entry<String, String> file : files.entrySet()) {
+                try (var remoteFile = sftp.write(file.getKey())) {
+                    remoteFile.write(file.getValue().getBytes(StandardCharsets.UTF_8));
+                }
+            }
+        } finally {
+            release(sem);
+        }
+    }
+
     private void deleteInternal(List<String> files) throws IOException {
         int sem = acquire();
 
@@ -180,6 +194,15 @@ public class SshSessionController extends AbstractSessionController implements I
     public void put(InputStream source, String dest) {
         try {
             putInternal(source, dest);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void putStringFiles(Map<String, String> files) {
+        try {
+            putStringFilesInternal(files);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

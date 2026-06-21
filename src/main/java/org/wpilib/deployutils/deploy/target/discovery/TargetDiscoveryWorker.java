@@ -28,6 +28,7 @@ import org.wpilib.deployutils.log.ETLoggerFactory;
 public abstract class TargetDiscoveryWorker implements WorkAction<TargetDiscoveryWorkerParameters> {
 
     private ETLogger log;
+    private long startTime;
 
     @Override
     public void execute() {
@@ -39,6 +40,8 @@ public abstract class TargetDiscoveryWorker implements WorkAction<TargetDiscover
 
     public void run(Consumer<DeployContext> callback, RemoteTarget target) {
         log = ETLoggerFactory.INSTANCE.create(this.getClass().getSimpleName() +"[" + target.getName() + "]");
+
+        startTime = System.nanoTime();
 
         Collection<DeployLocation> locSet = target.getLocations();
         Set<DiscoveryAction> actions = new HashSet<>(locSet.size());
@@ -76,6 +79,9 @@ public abstract class TargetDiscoveryWorker implements WorkAction<TargetDiscover
 
     private void succeeded(DeployContext ctx, Consumer<DeployContext> callback, RemoteTarget target) {
         log.log("Using " + ctx.friendlyString() + " for target " + target.getName());
+        long endTime = System.nanoTime();
+        long duration = (endTime - startTime) / 1_000_000;
+        log.log("Target discovery succeeded in " + duration + " ms");
         callback.accept(ctx);
     }
 

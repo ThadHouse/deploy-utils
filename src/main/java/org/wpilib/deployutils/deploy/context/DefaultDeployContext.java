@@ -106,8 +106,6 @@ public class DefaultDeployContext implements DeployContext {
         put(Map.of(dest, source), cache);
     }
 
-
-
     @Override
     public void put(Set<File> files, CacheMethod cache) {
         put(files.stream().collect(Collectors.toMap(x -> x.getName(), x -> x)), cache);
@@ -138,5 +136,17 @@ public class DefaultDeployContext implements DeployContext {
         if (!entries.isEmpty()) {
             logger.log("  " + entries.size() + " file(s) were deleted");
         }
+    }
+
+    @Override
+    public void putStringFiles(Map<String, String> files) {
+        session.execute("mkdir -p " + workingDir);
+
+
+        Map<String, String> entries = files.entrySet().stream().map(x -> {
+            logger.log("  -F-> " + x.getKey() + " @ " + workingDir);
+            return x;
+        }).collect(Collectors.toMap(x -> PathUtils.combine(workingDir, x.getKey()), x -> x.getValue()));
+        session.putStringFiles(entries);
     }
 }
