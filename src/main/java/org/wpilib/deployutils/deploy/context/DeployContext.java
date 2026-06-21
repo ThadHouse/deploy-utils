@@ -37,6 +37,9 @@ public interface DeployContext {
 
     void delete(Stream<String> files);
 
+    // Send a batch of string files, key is the destination path and value is the file content
+    void putStringFiles(Map<String, String> files);
+
     String friendlyString();
 
     DeployContext subContext(String workingDir);

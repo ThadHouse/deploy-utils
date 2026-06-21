@@ -14,6 +14,8 @@ public interface SessionController extends AutoCloseable {
 
     void put(InputStream source, String dest);
 
+    void putStringFiles(Map<String, String> files);
+
     void delete(List<String> files);
 
     String friendlyString();
