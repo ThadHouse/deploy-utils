@@ -24,7 +24,7 @@ public class JavaClasspathArtifact extends FileTreeArtifact {
         ProjectLayout projectLayout = target.getProject().getLayout();
 
         getPreWorkerThread().add(cfg -> {
-            if (!configurationProperty.isPresent() && !jarProperty.isPresent()) {
+            if (!configurationProperty.isPresent() || !jarProperty.isPresent()) {
                 return;
             }
             var fileTree = configurationProperty.get().resolve();
