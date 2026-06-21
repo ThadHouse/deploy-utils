@@ -31,8 +31,6 @@ public class JavaClasspathArtifact extends FileTreeArtifact {
             var files = projectLayout.files(fileTree).plus(jarProperty.get().getOutputs().getFiles());
             getFiles().set(files.getAsFileTree());
         });
-
-        getDeleteOldFiles().set(true);
     }
 
     private final Property<Configuration> configurationProperty;
